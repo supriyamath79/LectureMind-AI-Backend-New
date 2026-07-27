@@ -1,35 +1,42 @@
-import sqlite3
-from pathlib import Path
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker, declarative_base
+# from dotenv import load_dotenv
+# import os
 
-# Database file location
-DB_PATH = Path("database/lecturemind.db")
+# load_dotenv()
+
+# DATABASE_URL = os.getenv("DATABASE_URL")
+
+# engine = create_engine(
+#     DATABASE_URL,
+#     pool_pre_ping=True
+# )
+
+# SessionLocal = sessionmaker(
+#     autocommit=False,
+#     autoflush=False,
+#     bind=engine
+# )
+
+# Base = declarative_base()
+
+
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+import sqlite3
+import os
+
+DB_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "lecturemind.db"
+)
 
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
-
-def initialize_database():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS lectures (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            video_path TEXT,
-            transcript_path TEXT,
-            ocr_path TEXT,
-            merged_path TEXT,
-            embedding_path TEXT,
-            faiss_path TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
-    conn.commit()
-    conn.close()
-
-    print("Database initialized successfully.")

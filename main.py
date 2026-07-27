@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.lecture_router import router as lecture_router
-from database.database import initialize_database
 from progress import get_progress
-
+from routers.summary_router import router as summary_router
+from routers.keypoints_router import router as keypoints_router
 from routers.upload_router import router as upload_router
 from routers.ask_router import router as ask_router
-
+from routers.notes_router import router as notes_router
+from routers.quiz_router import router as quiz_router
 # Initialize Database
-initialize_database()
 
 # Create FastAPI App
 app = FastAPI()
@@ -17,7 +17,10 @@ app = FastAPI()
 app.include_router(upload_router)
 app.include_router(ask_router)
 app.include_router(lecture_router)
-
+app.include_router(summary_router)
+app.include_router(notes_router)
+app.include_router(keypoints_router)
+app.include_router(quiz_router)
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,

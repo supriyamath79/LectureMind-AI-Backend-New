@@ -35,7 +35,7 @@ def ask_question(
     print("BEST SIMILARITY SCORE:", best_score)
     print("===================================\n")
 
-    if best_score < 0.60:
+    if best_score < 0.40:
         return {
             "answer": "I could not find the answer in the lecture."
         }

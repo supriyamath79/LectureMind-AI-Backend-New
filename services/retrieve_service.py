@@ -35,7 +35,7 @@ def retrieve_chunks(question, embedding_file, faiss_file):
     results = []
     seen = set()
 
-    SIMILARITY_THRESHOLD = 0.35
+    SIMILARITY_THRESHOLD = 0.5
 
     print("==============================")
     print("Similarity Scores")
