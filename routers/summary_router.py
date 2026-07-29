@@ -1,26 +1,15 @@
-from fastapi import APIRouter, Form
+"""Summary API routes."""
 
-from managers.lecture_manager import get_lecture
+from fastapi import APIRouter, Depends, Form
+
+from dependencies.auth import get_current_user
 from services.summary_service import generate_summary
 
 router = APIRouter()
 
 
 @router.post("/summary")
-def summarize_lecture(
-    lecture_id: int = Form(...)
-):
-    lecture = get_lecture(lecture_id)
+def summarize_lecture(lecture_id: int = Form(...), current_user=Depends(get_current_user)):
+    """Generate a lecture summary."""
 
-    if lecture is None:
-        return {
-            "summary": "Lecture not found."
-        }
-
-    summary = generate_summary(
-        lecture["embedding_path"]
-    )
-
-    return {
-        "summary": summary
-    }
+    return generate_summary(lecture_id, current_user["id"])

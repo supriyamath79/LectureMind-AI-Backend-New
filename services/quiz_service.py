@@ -1,15 +1,27 @@
-import pickle
+"""Lecture quiz service."""
+
 import json
-import ollama
-from sympy import content
+
+from core.logging import get_logger
+from managers.lecture_manager import get_lecture_for_user
+from services.ai_service import generate_completion, load_lecture_from_embeddings
+from utils.responses import error_response, success_response
+
+logger = get_logger(__name__)
 
 
-def generate_quiz(embedding_file):
-    with open(embedding_file, "rb") as f:
-        data = pickle.load(f)
+def generate_quiz(lecture_id: int, user_id: int) -> dict:
+    """Generate a five-question multiple-choice quiz for a lecture."""
 
-    chunks = data["chunks"]
-    lecture = "\n\n".join(chunks)
+    lecture = get_lecture_for_user(lecture_id, user_id)
+
+    if lecture is None:
+        return error_response(
+            "Lecture not found.",
+            legacy={"quiz": []},
+        )
+
+    lecture_text = load_lecture_from_embeddings(lecture["embedding_path"])
 
     prompt = f"""
 You are LectureMind AI.
@@ -45,17 +57,11 @@ Required format:
 
 Lecture:
 
-{lecture}
+{lecture_text}
 """
 
-    response = ollama.chat(
-        model="gemma2:2b",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
+    content = generate_completion(
+        prompt,
         options={
             "temperature": 0,
             "num_predict": 700,
@@ -64,16 +70,14 @@ Lecture:
         },
     )
 
-    content = response["message"]["content"]
-
-    print("\n================ AI RESPONSE ================\n")
-    print(content)
-    print("\n=============================================\n")
-
     try:
         quiz = json.loads(content)
-    except Exception as e:
-        print("JSON Error:", e)
+    except Exception as exc:
+        logger.warning("Quiz JSON parsing failed: %s", exc)
         quiz = []
 
-    return quiz
+    return success_response(
+        "Quiz generated successfully.",
+        data={"quiz": quiz},
+        legacy={"quiz": quiz},
+    )

@@ -1,26 +1,15 @@
-from fastapi import APIRouter, Form
+"""Quiz API routes."""
 
-from managers.lecture_manager import get_lecture
+from fastapi import APIRouter, Depends, Form
+
+from dependencies.auth import get_current_user
 from services.quiz_service import generate_quiz
 
 router = APIRouter()
 
 
 @router.post("/quiz")
-def generate_lecture_quiz(
-    lecture_id: int = Form(...)
-):
-    lecture = get_lecture(lecture_id)
+def generate_lecture_quiz(lecture_id: int = Form(...), current_user=Depends(get_current_user)):
+    """Generate a lecture quiz."""
 
-    if lecture is None:
-        return {
-            "quiz": []
-        }
-
-    quiz = generate_quiz(
-        lecture["embedding_path"]
-    )
-
-    return {
-        "quiz": quiz
-    }
+    return generate_quiz(lecture_id, current_user["id"])

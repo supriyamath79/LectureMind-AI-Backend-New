@@ -1,25 +1,15 @@
-from fastapi import APIRouter, Form
+"""Key points API routes."""
 
-from managers.lecture_manager import get_lecture
+from fastapi import APIRouter, Depends, Form
+
+from dependencies.auth import get_current_user
 from services.keypoints_service import generate_keypoints
 
 router = APIRouter()
 
+
 @router.post("/keypoints")
-def get_key_points(
-    lecture_id: int = Form(...)
-):
-    lecture = get_lecture(lecture_id)
+def get_key_points(lecture_id: int = Form(...), current_user=Depends(get_current_user)):
+    """Generate key points for a lecture."""
 
-    if lecture is None:
-        return {
-            "keypoints": "Lecture not found."
-        }
-
-    keypoints = generate_keypoints(
-        lecture["embedding_path"]
-    )
-
-    return {
-        "keypoints": keypoints
-    }
+    return generate_keypoints(lecture_id, current_user["id"])

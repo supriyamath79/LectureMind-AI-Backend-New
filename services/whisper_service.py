@@ -1,32 +1,30 @@
-import whisper
+"""Whisper transcription service."""
+
 import os
 
-model = whisper.load_model("tiny")
+import whisper
+
+from core.config import settings
+from core.logging import get_logger
+from utils.file_utils import ensure_directory
+
+logger = get_logger(__name__)
+
+model = whisper.load_model(settings.whisper_model)
 
 
 def transcribe_audio(audio_path):
+    """Transcribe an audio file and persist the transcript."""
 
-    print("=" * 50)
-    print("Audio Path:", audio_path)
-    print("Exists:", os.path.exists(audio_path))
-    print("Size:", os.path.getsize(audio_path))
-    print("=" * 50)
-
+    logger.info("Transcription started: %s", audio_path)
     result = model.transcribe(audio_path)
 
-    output_folder = "../outputs/transcripts"
-    os.makedirs(output_folder, exist_ok=True)
-
-    transcript_name = os.path.splitext(
-        os.path.basename(audio_path)
-    )[0] + ".txt"
-
-    transcript_path = os.path.join(
-        output_folder,
-        transcript_name
-    )
+    output_folder = ensure_directory(os.path.join(settings.output_dir, "transcripts"))
+    transcript_name = os.path.splitext(os.path.basename(audio_path))[0] + ".txt"
+    transcript_path = os.path.join(output_folder, transcript_name)
 
     with open(transcript_path, "w", encoding="utf-8") as f:
         f.write(result["text"])
 
+    logger.info("Transcription completed: %s", transcript_path)
     return transcript_path

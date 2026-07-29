@@ -1,11 +1,16 @@
+"""Transcript and OCR merge service."""
+
 import os
 import re
 
+from core.config import settings
+from utils.file_utils import ensure_directory
+
+
 def merge_text(transcript_file, ocr_file):
+    """Merge Whisper transcript and cleaned OCR text into final notes."""
 
-    output_folder = "../outputs/final_notes"
-    os.makedirs(output_folder, exist_ok=True)
-
+    output_folder = ensure_directory(os.path.join(settings.output_dir, "final_notes"))
     output_file = os.path.join(output_folder, "final_notes.txt")
 
     with open(transcript_file, "r", encoding="utf-8") as t:
@@ -17,26 +22,17 @@ def merge_text(transcript_file, ocr_file):
     cleaned_ocr = []
 
     for line in ocr_lines:
-
         line = line.strip()
 
-        # Skip empty lines
         if not line:
             continue
-
-        # Skip frame headings
         if "frame_" in line:
             continue
-
-        # Skip separators
         if "====" in line:
             continue
-
-        # Skip very short text
         if len(line) < 15:
             continue
 
-        # Skip lines with very few letters (likely OCR noise)
         letters = re.findall(r"[A-Za-z]", line)
         if len(letters) < 8:
             continue
@@ -44,10 +40,8 @@ def merge_text(transcript_file, ocr_file):
         cleaned_ocr.append(line)
 
     with open(output_file, "w", encoding="utf-8") as f:
-
         f.write("========== TRANSCRIPT ==========\n\n")
         f.write(transcript)
-
         f.write("\n\n========== IMPORTANT TEXT FROM SLIDES ==========\n\n")
 
         for line in cleaned_ocr:

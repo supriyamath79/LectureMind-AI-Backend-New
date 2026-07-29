@@ -1,21 +1,57 @@
-print("LLM SERVICE IMPORTED")
+"""Question answering service."""
 
-import ollama
+from core.config import settings
+from core.logging import get_logger
+from managers.lecture_manager import get_lecture_for_user
+from services.ai_service import generate_completion
+from services.retrieve_service import retrieve_chunks
+from utils.responses import error_response, success_response
+
+logger = get_logger(__name__)
+
+
+def answer_question(lecture_id: int, question: str, user_id: int) -> dict:
+    """Answer a question for one lecture using retrieved context."""
+
+    lecture = get_lecture_for_user(lecture_id, user_id)
+
+    if lecture is None:
+        return error_response(
+            "Lecture not found.",
+            legacy={"message": "Lecture not found."},
+        )
+
+    retrieved = retrieve_chunks(
+        question,
+        lecture["embedding_path"],
+        lecture["faiss_path"],
+    )
+
+    chunks = retrieved["chunks"]
+    best_score = retrieved["best_score"]
+    logger.info("Best similarity score: %.4f", best_score)
+
+    if best_score < settings.answer_similarity_threshold:
+        answer = "I could not find the answer in the lecture."
+        return success_response(
+            "Answer generated successfully.",
+            data={"answer": answer},
+            legacy={"answer": answer},
+        )
+
+    answer = generate_answer(question, chunks)
+    return success_response(
+        "Answer generated successfully.",
+        data={"answer": answer},
+        legacy={"answer": answer},
+    )
 
 
 def generate_answer(question, retrieved_chunks):
-    # Use only the top 2 retrieved chunks
+    """Generate an answer from the top retrieved chunks."""
+
     context = "\n\n".join(retrieved_chunks[:2])
 
-    # Debug: Print retrieved chunks
-    print("\n========== RETRIEVED CHUNKS ==========\n")
-
-    for i, chunk in enumerate(retrieved_chunks[:2], start=1):
-        print(f"\nChunk {i}:\n")
-        print(chunk)
-        print("-" * 60)
-
-    # Prompt
     prompt = f"""
     You are LectureMind AI.
 
@@ -43,28 +79,12 @@ def generate_answer(question, retrieved_chunks):
     Answer:
     """
 
-    # Generate answer using Gemma
-    response = ollama.chat(
-        model="gemma2:2b",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
+    return generate_completion(
+        prompt,
         options={
-        "temperature":0,
-        "num_predict":512,
-        "top_p":0.9,
-        "top_k":40
-    }
+            "temperature": 0,
+            "num_predict": 512,
+            "top_p": 0.9,
+            "top_k": 40,
+        },
     )
-
-    answer = response["message"]["content"]
-
-    # Debug: Print answer
-    print("\n========== GENERATED ANSWER ==========\n")
-    print(answer)
-    print("\n======================================\n")
-
-    return answer

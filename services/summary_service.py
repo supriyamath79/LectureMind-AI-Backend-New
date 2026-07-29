@@ -1,16 +1,22 @@
-import pickle
-import ollama
+"""Lecture summary service."""
+
+from managers.lecture_manager import get_lecture_for_user
+from services.ai_service import generate_completion, load_lecture_from_embeddings
+from utils.responses import error_response, success_response
 
 
-def generate_summary(embedding_file):
+def generate_summary(lecture_id: int, user_id: int) -> dict:
+    """Generate professional study notes summary for a lecture."""
 
-    with open(embedding_file, "rb") as f:
-        data = pickle.load(f)
+    lecture = get_lecture_for_user(lecture_id, user_id)
 
-    chunks = data["chunks"]
+    if lecture is None:
+        return error_response(
+            "Lecture not found.",
+            legacy={"summary": "Lecture not found."},
+        )
 
-    # Use the entire lecture
-    lecture = "\n\n".join(chunks)
+    lecture_text = load_lecture_from_embeddings(lecture["embedding_path"])
 
     prompt = f"""
 You are LectureMind AI.
@@ -33,25 +39,23 @@ Rules:
 
 Lecture:
 
-{lecture}
+{lecture_text}
 
 Generate the study notes:
 """
 
-    response = ollama.chat(
-        model="gemma2:2b",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
+    summary = generate_completion(
+        prompt,
         options={
             "temperature": 0,
             "num_predict": 512,
             "top_p": 0.9,
-            "top_k": 40
-        }
+            "top_k": 40,
+        },
     )
 
-    return response["message"]["content"]
+    return success_response(
+        "Summary generated successfully.",
+        data={"summary": summary},
+        legacy={"summary": summary},
+    )

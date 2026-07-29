@@ -33,3 +33,5 @@ python-dotenv
 
 tqdm
 requests
+bcrypt
+PyJWT

@@ -1,34 +1,39 @@
-from sentence_transformers import SentenceTransformer
+"""Sentence embedding service."""
+
 import os
 import pickle
 
-# Load model only once
-model = SentenceTransformer("all-MiniLM-L6-v2")
+from sentence_transformers import SentenceTransformer
+
+from core.config import settings
+from core.logging import get_logger
+from utils.file_utils import ensure_directory
+
+logger = get_logger(__name__)
+
+model = SentenceTransformer(settings.embedding_model)
 
 
 def create_embeddings(chunks):
+    """Create normalized sentence embeddings and persist them."""
 
     embeddings = model.encode(
-    chunks,
-    normalize_embeddings=True,
-    convert_to_numpy=True
-)
-
-    output_folder = "../outputs/embeddings"
-    os.makedirs(output_folder, exist_ok=True)
-
-    output_file = os.path.join(
-        output_folder,
-        "embeddings.pkl"
+        chunks,
+        normalize_embeddings=True,
+        convert_to_numpy=True,
     )
+
+    output_folder = ensure_directory(os.path.join(settings.output_dir, "embeddings"))
+    output_file = os.path.join(output_folder, "embeddings.pkl")
 
     with open(output_file, "wb") as f:
         pickle.dump(
             {
                 "chunks": chunks,
-                "embeddings": embeddings
+                "embeddings": embeddings,
             },
-            f
+            f,
         )
 
+    logger.info("Embedding generation completed: %s", output_file)
     return output_file
