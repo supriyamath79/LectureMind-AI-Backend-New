@@ -36,10 +36,10 @@ class Settings:
     ollama_model: str = os.getenv("OLLAMA_MODEL", "gemma2:2b")
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     answer_similarity_threshold: float = float(
-        os.getenv("ANSWER_SIMILARITY_THRESHOLD", "0.40")
+        os.getenv("ANSWER_SIMILARITY_THRESHOLD", "0.30")
     )
     retrieval_similarity_threshold: float = float(
-        os.getenv("RETRIEVAL_SIMILARITY_THRESHOLD", "0.5")
+        os.getenv("RETRIEVAL_SIMILARITY_THRESHOLD", "0.3")
     )
     jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "change-this-secret-in-production")
     jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")

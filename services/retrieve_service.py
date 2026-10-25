@@ -58,6 +58,7 @@ def retrieve_chunks(question, embedding_file, faiss_file):
 
         seen.add(chunk)
         results.append(chunk)
+        
 
     best_score = float(distances[0][0])
     logger.info("Retrieved %s chunks with best score %.4f", len(results), best_score)

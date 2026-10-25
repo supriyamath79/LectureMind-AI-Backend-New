@@ -50,7 +50,7 @@ def answer_question(lecture_id: int, question: str, user_id: int) -> dict:
 def generate_answer(question, retrieved_chunks):
     """Generate an answer from the top retrieved chunks."""
 
-    context = "\n\n".join(retrieved_chunks[:2])
+    context = "\n\n".join(retrieved_chunks[:5])
 
     prompt = f"""
     You are LectureMind AI.
